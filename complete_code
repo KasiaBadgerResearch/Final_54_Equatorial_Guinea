@@ -1,0 +1,53 @@
+# How have the shares of liquid liabilities, central bank assets, and financial system deposits relative to GDP evolved in Equatorial Guinea between 1985 and 2019?
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+# Folders
+data_raw_folder = "data_raw/"
+data_clean_folder = "data_clean/"
+figures_folder = "figures/"
+
+# Load CSV
+filename = "financial-sector_gnq_filtered.csv"  # Filtered dataset with only relevant rows
+df = pd.read_csv(os.path.join(data_raw_folder, filename))
+
+# Keep only needed columns
+df = df[["Year", "Indicator Name", "Value"]]
+
+# Convert Year and Value to numeric, drop invalid rows
+df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
+df = df.dropna(subset=["Year", "Value"])
+
+# Pivot indicators into separate columns
+df_pivot = df.pivot(index="Year", columns="Indicator Name", values="Value").reset_index()
+df_pivot = df_pivot.sort_values("Year")
+
+print("Pivoted Equatorial Guinea dataset:")
+display(df_pivot)
+
+# Interpolate missing values for smooth plotting (optional)
+df_plot = df_pivot.interpolate(method='linear')
+
+# Plot the indicators
+plt.figure(figsize=(10,6))
+plt.plot(df_plot["Year"], df_plot["Liquid liabilities to GDP (%)"], 
+         marker='o', linestyle='-', label="Liquid liabilities to GDP (%)")
+plt.plot(df_plot["Year"], df_plot["Central bank assets to GDP (%)"], 
+         marker='o', linestyle='-', label="Central bank assets to GDP (%)")
+plt.plot(df_plot["Year"], df_plot["Financial system deposits to GDP (%)"], 
+         marker='o', linestyle='-', label="Financial system deposits to GDP (%)")
+
+plt.title("Equatorial Guinea: Liquid liabilities vs Central bank assets vs Financial system deposits to GDP (1985-2019)")
+plt.xlabel("Year")
+plt.ylabel("Percentage")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(figures_folder, "equatorial_guinea_liquid_liabilities_vs_central_bank_assets_vs_financial_system_deposits_to_gdp.png"))
+plt.show()
+
+# Save cleaned CSV
+df_pivot.to_csv(os.path.join(data_clean_folder, "equatorial_guinea_liquid_liabilities_vs_central_bank_assets_vs_financial_system_deposits_to_gdp"), index=False)
